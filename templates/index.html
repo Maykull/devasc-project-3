@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MapQuest Directions</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles.css') }}"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <h1>MapQuest Directions</h1>
+      <form method="POST">
+        <label for="start_location">Starting Location:</label>
+        <input type="text" id="start_location" name="start_location" required />
+
+        <label for="destination">Destination:</label>
+        <input type="text" id="destination" name="destination" required />
+
+        <label for="vehicle_profile">Vehicle Profile:</label>
+        <select id="vehicle_profile" name="vehicle_profile">
+          <option value="car">Car</option>
+          <option value="bike">Bike</option>
+          <option value="foot">Foot</option>
+        </select>
+
+        <button class="map-btn" type="submit">Get Directions</button>
+      </form>
+
+      {% if instructions %}
+      <div class="result">
+        <h2>Route from {{ start }} to {{ dest }}</h2>
+        <p>
+          Distance: {{ distance_miles|round(2) }} miles ({{ distance_km|round(2)
+          }} km)
+        </p>
+        <p>Estimated Duration: {{ duration_sec|round(2) }} seconds</p>
+        <h3>Directions:</h3>
+        <ul>
+          {% for step in instructions %}
+          <li>
+            {{ step["text"] }} ({{ step["distance"] / 1000|round(2) }} km)
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <a href="{{ url_for('welcome') }}">
+        <button class="back-btn">Back to Welcome</button>
+      </a>
+      {% elif error %}
+      <p class="error">{{ error }}</p>
+      {% endif %}
+    </div>
+  </body>
+</html>
