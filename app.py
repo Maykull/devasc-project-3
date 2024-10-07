@@ -1,71 +1,95 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, request, render_template, jsonify
 import requests
 import urllib.parse
+from datetime import datetime, timedelta  # Import datetime for ETA calculation
 
 app = Flask(__name__)
 
 route_url = "https://graphhopper.com/api/1/route?"
-key = "3f75d86d-495e-4b06-ac45-d30bd9d7c821"  # Replace with your API key
+key = "36c57771-b62a-41c7-a761-38bfb729be0c"
 
-# Helper function for geocoding
 def geocoding(location, key):
     geocode_url = "https://graphhopper.com/api/1/geocode?"
     url = geocode_url + urllib.parse.urlencode({"q": location, "limit": "1", "key": key})
-    response = requests.get(url)
-    data = response.json()
-
-    if response.status_code == 200 and data["hits"]:
-        lat = data["hits"][0]["point"]["lat"]
-        lng = data["hits"][0]["point"]["lng"]
-        return lat, lng, data["hits"][0].get("name", "")
-    else:
-        return None, None, ""
-
-# Flask Routes
-@app.route("/")
-def root():
-    return redirect(url_for('welcome'))
-
-@app.route("/welcome")
-def welcome():
-    return render_template("welcome.html")
-
-@app.route("/mapquest", methods=["GET", "POST"])  # Changed to /mapquest
-def index():
-    if request.method == "POST":
-        start_loc = request.form.get("start_location")
-        dest_loc = request.form.get("destination")
-        vehicle_profile = request.form.get("vehicle_profile")
-        
-        start_lat, start_lng, start_name = geocoding(start_loc, key)
-        dest_lat, dest_lng, dest_name = geocoding(dest_loc, key)
-        
-        if start_lat and dest_lat:
-            # Build Route URL
-            op = f"&point={start_lat},{start_lng}"
-            dp = f"&point={dest_lat},{dest_lng}"
-            route = route_url + urllib.parse.urlencode({"key": key, "vehicle": vehicle_profile}) + op + dp
-            
-            # Fetch route data
-            route_response = requests.get(route)
-            route_data = route_response.json()
-
-            if route_response.status_code == 200:
-                distance_km = route_data["paths"][0]["distance"] / 1000
-                distance_miles = distance_km / 1.61
-                duration_sec = route_data["paths"][0]["time"] / 1000
-                instructions = route_data["paths"][0]["instructions"]
-                
-                return render_template("index.html", 
-                                       start=start_name, dest=dest_name, 
-                                       distance_km=distance_km, distance_miles=distance_miles, 
-                                       duration_sec=duration_sec, instructions=instructions)
-            else:
-                return render_template("index.html", error="Failed to fetch route.")
-        else:
-            return render_template("index.html", error="Invalid location.")
+    replydata = requests.get(url)
+    json_data = replydata.json()
+    json_status = replydata.status_code
     
-    return render_template("index.html")
+    if json_status == 200 and len(json_data["hits"]) != 0:
+        lat = json_data["hits"][0]["point"]["lat"]
+        lng = json_data["hits"][0]["point"]["lng"]
+        name = json_data["hits"][0]["name"]
+        return json_status, lat, lng, name
+    else:
+        return None, None, None, location
 
-if __name__ == "__main__":
+@app.route('/')
+def index():
+    return render_template('index.html')
+
+@app.route('/get_directions', methods=['POST'])
+def get_directions():
+    vehicle = request.form['vehicle']
+    loc1 = request.form['start_loc']
+    loc2 = request.form['dest_loc']
+    optimization = request.form['optimization']  # 'fastest' or 'shortest'
+
+    orig = geocoding(loc1, key)
+    dest = geocoding(loc2, key)
+
+    if orig[0] == 200 and dest[0] == 200:
+        op = "&point=" + str(orig[1]) + "%2C" + str(orig[2])
+        dp = "&point=" + str(dest[1]) + "%2C" + str(dest[2])
+
+        # Adjust route parameters based on optimization selection
+        if optimization == 'shortest':
+            optimize_param = '&optimize=false'  # Shortest route
+        else:
+            optimize_param = '&optimize=true'  # Fastest route (default)
+
+        paths_url = route_url + urllib.parse.urlencode({"key": key, "vehicle": vehicle}) + op + dp + optimize_param
+        paths_data = requests.get(paths_url).json()
+
+        if requests.get(paths_url).status_code == 200:
+            directions = f"Directions from {orig[3]} to {dest[3]}:\n"
+            miles = paths_data["paths"][0]["distance"] / 1000 / 1.61 
+            km = paths_data["paths"][0]["distance"] / 1000
+            time = int(paths_data["paths"][0]["time"] / 1000 / 60)  # in minutes
+            directions += f"Distance: {km:.1f} km ({miles:.1f} miles)\nDuration: {time} minutes\n\n"
+            
+            # Calculate ETA
+            current_time = datetime.now()  # Get current time
+            eta = current_time + timedelta(minutes=time)  # Add travel time to current time
+            eta_formatted = eta.strftime("%I:%M %p")  # Format ETA as HH:MM AM/PM
+
+            directions += f"Estimated Arrival Time (ETA): {eta_formatted}\n\n"
+
+            steps = []
+            for step in paths_data["paths"][0]["instructions"]:
+                steps.append(f"{step['text']} ({step['distance']/1000:.1f} km)")
+
+            return jsonify({'directions': directions, 'steps': steps})
+        else:
+            return jsonify({'error': paths_data["message"]})
+    else:
+        return jsonify({'error': 'Invalid origin or destination'})
+
+@app.route('/suggestions')
+def suggestions():
+    query = request.args.get('query')
+    type = request.args.get('type')
+
+    # Geocoding URL to get location suggestions
+    geocode_url = "https://graphhopper.com/api/1/geocode?"
+    url = geocode_url + urllib.parse.urlencode({"q": query, "limit": "5", "key": key})  # Limit to 5 suggestions
+    replydata = requests.get(url)
+    json_data = replydata.json()
+    
+    suggestions = []
+    if replydata.status_code == 200 and len(json_data["hits"]) > 0:
+        suggestions = [hit["name"] for hit in json_data["hits"]]
+
+    return jsonify(suggestions)
+
+if __name__ == '__main__':
     app.run(debug=True)
