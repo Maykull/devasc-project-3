@@ -8,6 +8,8 @@ app = Flask(__name__)
 
 # GraphHopper API key
 key = "fe27fd23-2c23-4019-a2b3-e316d862a3a1"
+# Open-Meteo Weather API base URL
+weather_api_base_url = "https://api.open-meteo.com/v1/forecast"
 
 # Geocoding function to get latitude and longitude from location name
 def geocoding(location, key):
@@ -25,6 +27,28 @@ def geocoding(location, key):
         return lat, lng, name
     else:
         return None, None, location
+
+# Weather-fetching function
+def fetch_weather(lat, lng):
+    try:
+        # Fetch weather data from Open-Meteo API
+        weather_url = f"{weather_api_base_url}?latitude={lat}&longitude={lng}&current_weather=true"
+        response = requests.get(weather_url)
+        weather_data = response.json()
+        
+        if 'current_weather' in weather_data:
+            current_weather = weather_data['current_weather']
+            return {
+                "temperature": current_weather.get("temperature"),
+                "wind_speed": current_weather.get("windspeed"),
+                "weather_code": current_weather.get("weathercode"),
+                "time": current_weather.get("time"),
+            }
+        else:
+            return {"error": "Weather data not available"}
+    except Exception as e:
+        print(f"Error fetching weather data: {e}")
+        return {"error": "Failed to fetch weather data"}
 
 # Route for the welcome page
 @app.route('/')
@@ -53,6 +77,10 @@ def get_directions():
         if not end_lat or not end_lng:
             return jsonify({'error': f"Failed to geocode destination: {dest_loc}"}), 400
 
+        # Fetch weather for start and destination
+        start_weather = fetch_weather(start_lat, start_lng)
+        end_weather = fetch_weather(end_lat, end_lng)
+
         # Prepare request to GraphHopper
         start_coords = f"{start_lat},{start_lng}"
         end_coords = f"{end_lat},{end_lng}"
@@ -75,12 +103,17 @@ def get_directions():
         ]
 
         directions = f"Route from {start_name} to {end_name}"
-        return jsonify({'directions': directions, 'steps': steps, 'geometry': geometry})
+        return jsonify({
+            'directions': directions,
+            'steps': steps,
+            'geometry': geometry,
+            'start_weather': start_weather,
+            'end_weather': end_weather
+        })
 
     except Exception as e:
         print(f"Error in /get_directions: {e}")
         return jsonify({'error': 'An internal server error occurred.'}), 500
-
 
 # Route for location suggestions
 @app.route('/suggestions')
