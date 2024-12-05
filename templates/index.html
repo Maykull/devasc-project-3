@@ -6,6 +6,14 @@
     <title>LightPath: Route Tracker</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <!-- Leaflet JavaScript -->
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+
+    <!-- GraphHopper JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/graphhopper-js/dist/graphhopper.js"></script>
 
     <style>
         body {
@@ -211,6 +219,8 @@
         <button type="submit"><i class="fas fa-route"></i> Get Directions</button>
     </form>
 
+    <div id="map" style="height: 500px; margin-top: 20px; border-radius: 10px; box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);"></div>
+
     <div id="results">
         <h2><i class="fa-solid fa-diamond-turn-right"></i> Directions:</h2>
         <div id="directions-output" class="directions-list"></div>
@@ -290,11 +300,76 @@
             } else {
                 let directionsText = data.directions;
                 data.steps.forEach(step => {
-                    directionsText += step + "\n";
+                    directionsText += `${step.text} - ${(step.distance / 1000).toFixed(1)} km\n`;
                 });
                 document.getElementById('directions-output').innerText = directionsText;
             }
         };
+
+
+        const map = L.map('map').setView([51.505, -0.09], 13); // Default center (adjust as needed)
+
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Function to render the route
+        function renderRoute(route) {
+            console.log("Rendering Route:", route); // Debug the route data
+
+            // Clear any existing routes
+            if (window.routeLayer) {
+                map.removeLayer(window.routeLayer);
+            }
+
+            if (!route || !Array.isArray(route)) {
+                console.error("Invalid route data:", route);
+                alert("Invalid route data.");
+                return;
+            }
+
+            // Convert coordinates to LatLng array
+            const latLngs = route.map(coord => [coord[0], coord[1]]); // Ensure correct lat/lng order
+
+            // Add the route to the map
+            window.routeLayer = L.polyline(latLngs, { color: 'blue', weight: 5 }).addTo(map);
+
+            // Adjust map bounds to fit the route
+            map.fitBounds(window.routeLayer.getBounds());
+        }
+
+        // Form submission handler for directions
+        document.getElementById('route-form').addEventListener('submit', async function (event) {
+            event.preventDefault();
+
+            // Collect form data
+            const formData = new FormData(this);
+
+            // Fetch route data from the server
+            const response = await fetch('/get_directions', {
+                method: 'POST',
+                body: formData
+            });
+            const data = await response.json();
+
+            if (data.error) {
+                alert(data.error); // Show error if any
+            } else {
+                // Display route and details
+                const routeCoordinates = data.geometry;
+                renderRoute(routeCoordinates);
+
+                // Optionally display directions in a text container
+                document.getElementById('directions-output').innerHTML = `
+                    <p>${data.directions}</p>
+                    <ul>
+                        ${data.steps.map(step => `<li>${step.text} (${(step.distance / 1000).toFixed(1)} km)</li>`).join('')}
+                    </ul>
+                `;
+            }
+        });
     </script>
 </body>
 </html>

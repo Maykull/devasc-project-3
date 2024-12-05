@@ -1,32 +1,30 @@
 from flask import Flask, request, render_template, jsonify
 import requests
 import urllib.parse
-from datetime import datetime, timedelta
+import polyline  # For decoding encoded points
 
 # Initialize the Flask app
 app = Flask(__name__)
 
-# GraphHopper API route and key
-route_url = "https://graphhopper.com/api/1/route?"
-key = "36c57771-b62a-41c7-a761-38bfb729be0c"
+# GraphHopper API key
+key = "fe27fd23-2c23-4019-a2b3-e316d862a3a1"
 
 # Geocoding function to get latitude and longitude from location name
 def geocoding(location, key):
     geocode_url = "https://graphhopper.com/api/1/geocode?"
     url = geocode_url + urllib.parse.urlencode({"q": location, "limit": "1", "key": key})
     
-    replydata = requests.get(url)
-    json_data = replydata.json()
-    json_status = replydata.status_code
+    response = requests.get(url)
+    json_data = response.json()
+    status_code = response.status_code
     
-    # Check if geocoding was successful
-    if json_status == 200 and len(json_data["hits"]) != 0:
+    if status_code == 200 and json_data.get("hits"):
         lat = json_data["hits"][0]["point"]["lat"]
         lng = json_data["hits"][0]["point"]["lng"]
         name = json_data["hits"][0]["name"]
-        return json_status, lat, lng, name
+        return lat, lng, name
     else:
-        return None, None, None, location
+        return None, None, location
 
 # Route for the welcome page
 @app.route('/')
@@ -41,46 +39,48 @@ def index():
 # Route for fetching directions
 @app.route('/get_directions', methods=['POST'])
 def get_directions():
-    vehicle = request.form['vehicle']
-    loc1 = request.form['start_loc']
-    loc2 = request.form['dest_loc']
-    optimization = request.form['optimization']
+    try:
+        vehicle = request.form.get('vehicle', 'car')
+        start_loc = request.form.get('start_loc')
+        dest_loc = request.form.get('dest_loc')
 
-    # Get geocoding data for start and destination
-    orig = geocoding(loc1, key)
-    dest = geocoding(loc2, key)
+        # Geocode start and destination locations
+        start_lat, start_lng, start_name = geocoding(start_loc, key)
+        if not start_lat or not start_lng:
+            return jsonify({'error': f"Failed to geocode start location: {start_loc}"}), 400
 
-    # Ensure geocoding succeeded for both locations
-    if orig[0] == 200 and dest[0] == 200:
-        op = "&point=" + str(orig[1]) + "%2C" + str(orig[2])
-        dp = "&point=" + str(dest[1]) + "%2C" + str(dest[2])
+        end_lat, end_lng, end_name = geocoding(dest_loc, key)
+        if not end_lat or not end_lng:
+            return jsonify({'error': f"Failed to geocode destination: {dest_loc}"}), 400
 
-        # Use shortest or fastest route based on user selection
-        optimize_param = '&optimize=false' if optimization == 'shortest' else '&optimize=true'
-        paths_url = route_url + urllib.parse.urlencode({"key": key, "vehicle": vehicle}) + op + dp + optimize_param
-        paths_data = requests.get(paths_url).json()
+        # Prepare request to GraphHopper
+        start_coords = f"{start_lat},{start_lng}"
+        end_coords = f"{end_lat},{end_lng}"
+        route_url = f"https://graphhopper.com/api/1/route?key={key}&point={start_coords}&point={end_coords}&vehicle={vehicle}"
 
-        if requests.get(paths_url).status_code == 200:
-            directions = f"Directions from {orig[3]} to {dest[3]}:\n"
-            miles = paths_data["paths"][0]["distance"] / 1000 / 1.61
-            km = paths_data["paths"][0]["distance"] / 1000
-            time = int(paths_data["paths"][0]["time"] / 1000 / 60)
-            directions += f"Distance: {km:.1f} km ({miles:.1f} miles)\nDuration: {time} minutes\n\n"
-            
-            # Calculate Estimated Time of Arrival (ETA)
-            current_time = datetime.now()
-            eta = current_time + timedelta(minutes=time)
-            eta_formatted = eta.strftime("%I:%M %p")
-            directions += f"Estimated Arrival Time (ETA): {eta_formatted}\n\n"
+        response = requests.get(route_url)
+        paths_data = response.json()
 
-            # Collect step-by-step directions
-            steps = [f"{step['text']} ({step['distance']/1000:.1f} km)" for step in paths_data["paths"][0]["instructions"]]
+        if "paths" not in paths_data or not paths_data["paths"]:
+            return jsonify({'error': 'No routes found in the API response.'}), 500
 
-            return jsonify({'directions': directions, 'steps': steps})
-        else:
-            return jsonify({'error': paths_data["message"]})
-    else:
-        return jsonify({'error': 'Invalid origin or destination'})
+        # Decode the polyline
+        encoded_points = paths_data["paths"][0]["points"]
+        geometry = polyline.decode(encoded_points)
+
+        # Extract instructions (steps)
+        steps = [
+            {"text": step["text"], "distance": step["distance"]}
+            for step in paths_data["paths"][0]["instructions"]
+        ]
+
+        directions = f"Route from {start_name} to {end_name}"
+        return jsonify({'directions': directions, 'steps': steps, 'geometry': geometry})
+
+    except Exception as e:
+        print(f"Error in /get_directions: {e}")
+        return jsonify({'error': 'An internal server error occurred.'}), 500
+
 
 # Route for location suggestions
 @app.route('/suggestions')
@@ -89,12 +89,10 @@ def suggestions():
     geocode_url = "https://graphhopper.com/api/1/geocode?"
     url = geocode_url + urllib.parse.urlencode({"q": query, "limit": "5", "key": key})
     
-    replydata = requests.get(url)
-    json_data = replydata.json()
+    response = requests.get(url)
+    json_data = response.json()
     
-    # Extract and return location suggestions
-    suggestions = [hit["name"] for hit in json_data["hits"]] if replydata.status_code == 200 else []
-    
+    suggestions = [hit["name"] for hit in json_data.get("hits", [])]
     return jsonify(suggestions)
 
 # Run the Flask app
