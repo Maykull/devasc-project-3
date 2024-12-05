@@ -128,6 +128,11 @@ def suggestions():
     suggestions = [hit["name"] for hit in json_data.get("hits", [])]
     return jsonify(suggestions)
 
+@app.route('/travel-tips')
+def travel_tips():
+    return render_template('travel_tips.html')
+
+
 # Run the Flask app
 if __name__ == '__main__':
     app.run(debug=True)

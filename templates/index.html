@@ -294,8 +294,59 @@
       </div>
     </div>
 
-    <div class="back-btn">
-      <a href="/">Back to Welcome Page</a>
+    <div
+      class="back-btn"
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 20px;
+      "
+    >
+      <a
+        href="/"
+        style="
+          text-decoration: none;
+          background-color: #007bff;
+          color: white;
+          padding: 10px 20px;
+          border-radius: 5px;
+          font-size: 16px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          transition: background-color 0.3s ease;
+        "
+        onmouseover="this.style.backgroundColor='#0056b3'"
+        onmouseout="this.style.backgroundColor='#007bff'"
+      >
+        Back to Welcome Page
+      </a>
+    </div>
+
+    <div
+      style="
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-top: 20px;
+      "
+    >
+      <a
+        href="/travel-tips"
+        style="
+          text-decoration: none;
+          background-color: #007bff;
+          color: white;
+          padding: 10px 20px;
+          border-radius: 5px;
+          font-size: 16px;
+          box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+          transition: background-color 0.3s ease;
+        "
+        onmouseover="this.style.backgroundColor='#0056b3'"
+        onmouseout="this.style.backgroundColor='#007bff'"
+      >
+        Travel Tips
+      </a>
     </div>
 
     <script>
@@ -349,18 +400,18 @@
 
         // Display directions
         const directionsText = `
-            <p>${data.directions}</p>
-            <ul>
-              ${data.steps
-                .map(
-                  (step) =>
-                    `<li>${step.text} (${(step.distance / 1000).toFixed(
-                      1
-                    )} km)</li>`
-                )
-                .join("")}
-            </ul>
-          `;
+        <p>${data.directions}</p>
+        <ul>
+            ${data.steps
+              .map(
+                (step) =>
+                  `<li>${step.text} (${(step.distance / 1000).toFixed(
+                    1
+                  )} km)</li>`
+              )
+              .join("")}
+        </ul>
+    `;
         document.getElementById("directions-output").innerHTML = directionsText;
 
         // Display weather for start and destination locations
@@ -368,6 +419,9 @@
 
         // Render the route on the map
         renderRoute(data.geometry);
+
+        // Scroll to the map
+        document.getElementById("map").scrollIntoView({ behavior: "smooth" });
       };
 
       // Function to fetch suggestions from the server
@@ -465,6 +519,8 @@
         // Adjust map bounds to fit the route
         map.fitBounds(window.routeLayer.getBounds());
       }
+
+      //automatically scrolls down to map when user clicked get directions
     </script>
   </body>
 </html>
