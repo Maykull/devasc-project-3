@@ -1,0 +1,11 @@
+from app import fetch_weather
+
+def test_fetch_weather_valid_coords():
+    weather = fetch_weather(52.52, 13.405)
+    assert "temperature" in weather
+    assert "wind_speed" in weather
+    assert "weather_code" in weather
+
+def test_fetch_weather_invalid_coords():
+    weather = fetch_weather(None, None)
+    assert "error" in weather
