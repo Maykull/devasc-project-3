@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Travel Tips</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Roboto", sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(to bottom right, #e6f2ff, #f0f8ff);
+        color: #333;
+      }
+      header {
+        background: linear-gradient(to right, #007bff, #0056b3);
+        color: white;
+        padding: 20px 0;
+        text-align: center;
+        margin-bottom: 20px;
+        border-radius: 0 0 10px 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+      header h1 {
+        margin: 0;
+        font-size: 2.5em;
+        font-weight: 700;
+      }
+      p.intro {
+        font-size: 1.2em;
+        color: #333;
+        text-align: center;
+        margin: 20px 20px 30px;
+      }
+      .tips-container {
+        max-width: 800px;
+        margin: auto;
+      }
+      .tip-card {
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+      .tip-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+      }
+      .tip-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+      }
+      .tip-header h2 {
+        margin: 0 0 0 10px;
+        color: #0056b3;
+        font-size: 1.4em;
+        font-weight: 600;
+      }
+      .tip-header i {
+        font-size: 1.8em;
+        color: #007bff;
+      }
+      .tip-list {
+        padding-left: 20px;
+        margin: 0;
+        color: #555;
+      }
+      .tip-list li {
+        margin: 8px 0;
+        line-height: 1.6;
+      }
+      footer {
+        text-align: center;
+        margin-top: 40px;
+        padding: 20px 0;
+        background: linear-gradient(to right, #007bff, #0056b3);
+        color: white;
+        border-radius: 10px 10px 0 0;
+      }
+      footer a {
+        text-decoration: none;
+        background-color: white;
+        color: #007bff;
+        padding: 10px 20px;
+        border-radius: 5px;
+        font-weight: 600;
+        transition: background-color 0.3s ease, color 0.3s ease;
+      }
+      footer a:hover {
+        background-color: #0056b3;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Travel Tips</h1>
+    </header>
+    <p class="intro">
+      Planning your trip can be exciting yet challenging. To help you make the
+      most of your travel experience, we’ve compiled a list of essential tips:
+    </p>
+    <div class="tips-container">
+      <div class="tip-card">
+        <div class="tip-header">
+          <i class="fas fa-map-marked-alt"></i>
+          <h2>1. Plan Ahead</h2>
+        </div>
+        <ul class="tip-list">
+          <li>
+            Research your destination, including local culture, customs, and
+            weather.
+          </li>
+          <li>
+            Book accommodations, flights, and activities in advance to avoid
+            last-minute hassles.
+          </li>
+        </ul>
+      </div>
+      <div class="tip-card">
+        <div class="tip-header">
+          <i class="fas fa-suitcase"></i>
+          <h2>2. Pack Smart</h2>
+        </div>
+        <ul class="tip-list">
+          <li>
+            Make a checklist to ensure you don’t forget anything important.
+          </li>
+          <li>
+            Pack versatile clothing and consider the season and weather of your
+            destination.
+          </li>
+          <li>
+            Don’t forget travel essentials like chargers, toiletries, and travel
+            documents.
+          </li>
+        </ul>
+      </div>
+      <div class="tip-card">
+        <div class="tip-header">
+          <i class="fas fa-mobile-alt"></i>
+          <h2>3. Stay Connected</h2>
+        </div>
+        <ul class="tip-list">
+          <li>Share your itinerary with family or friends for safety.</li>
+          <li>
+            Keep a backup of important documents like your ID and travel tickets
+            in your email or phone.
+          </li>
+        </ul>
+      </div>
+      <div class="tip-card">
+        <div class="tip-header">
+          <i class="fas fa-wallet"></i>
+          <h2>4. Budget Wisely</h2>
+        </div>
+        <ul class="tip-list">
+          <li>
+            Plan a budget for your trip, factoring in food, transportation, and
+            activities.
+          </li>
+          <li>
+            Carry some local currency and ensure your bank cards work at your
+            destination.
+          </li>
+        </ul>
+      </div>
+      <div class="tip-card">
+        <div class="tip-header">
+          <i class="fas fa-shield-alt"></i>
+          <h2>5. Stay Safe</h2>
+        </div>
+        <ul class="tip-list">
+          <li>
+            Be aware of your surroundings and avoid secluded areas at night.
+          </li>
+          <li>Learn emergency numbers to contact in case of emergency.</li>
+          <li>Keep valuables secure and always have a valid ID in your bag.</li>
+        </ul>
+      </div>
+      <div class="tip-card">
+        <div class="tip-header">
+          <i class="fas fa-globe"></i>
+          <h2>6. Respect the Culture</h2>
+        </div>
+        <ul class="tip-list">
+          <li>
+            Learn a few phrases in the local language to connect with the
+            locals.
+          </li>
+          <li>
+            Be respectful of traditions, customs, and dress codes in your
+            destination.
+          </li>
+        </ul>
+      </div>
+      <div class="tip-card">
+        <div class="tip-header">
+          <i class="fas fa-heart"></i>
+          <h2>7. Stay Healthy</h2>
+        </div>
+        <ul class="tip-list">
+          <li>Drink plenty of water to stay hydrated during activities.</li>
+          <li>
+            Be cautious of what you eat to avoid allergies or food
+            sensitivities.
+          </li>
+          <li>Carry a basic first-aid kit with medications for emergencies.</li>
+        </ul>
+      </div>
+      <div class="tip-card">
+        <div class="tip-header">
+          <i class="fas fa-camera"></i>
+          <h2>8. Capture Memories</h2>
+        </div>
+        <ul class="tip-list">
+          <li>
+            Document your trip with photos and videos, but don’t forget to live
+            in the moment.
+          </li>
+          <li>
+            Keep a travel journal to write about your experiences and
+            highlights.
+          </li>
+        </ul>
+      </div>
+    </div>
+    <footer>
+      <a href="/">Back to Home</a>
+    </footer>
+    <script
+      src="https://kit.fontawesome.com/a076d05399.js"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
